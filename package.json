@@ -2,13 +2,19 @@
   "name": "steambot",
   "version": "1.0.0",
   "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "16.x"
+  },
   "repository": "https://github.com/Rider21/steambot.git",
   "author": "Rider21 <58046032+Rider21@users.noreply.github.com>",
   "license": "MIT",
   "dependencies": {
-    "@replit/database": "2.0.3",
     "discord.js": "14.11.0",
     "dotenv": "16.0.3",
+    "mongoose": "7.1.1",
     "qrcode": "1.5.3",
     "steam-session": "^1.2.2",
     "steam-user": "^4.28.3"

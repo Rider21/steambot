@@ -38,7 +38,7 @@ async function startWithQR(webhook, msg, callback) {
 			],
 		});
 	}
-	console.log(callback)
+
 	session.on("authenticated", () => {
 		let embed1 = new EmbedBuilder()
 		.setTitle("Авторизация")
@@ -83,8 +83,6 @@ async function startWithQR(webhook, msg, callback) {
 }
 
 function getExpiration(token) {
-	if (!token) true;
-
 	const { exp } = JSON.parse(
 		Buffer.from(token.split(".")[1], "base64").toString("utf8")
 	);
