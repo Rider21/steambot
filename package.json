@@ -6,7 +6,7 @@
     "start": "node index.js"
   },
   "engines": {
-    "node": "16.x"
+    "node": "18.x"
   },
   "repository": "https://github.com/Rider21/steambot.git",
   "author": "Rider21 <58046032+Rider21@users.noreply.github.com>",

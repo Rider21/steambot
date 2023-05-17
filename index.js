@@ -26,7 +26,7 @@ const files = mongoose.model("files", {
 (async () => {
   const acc = await account.find({});
   for (let i = 0; i < max; i++) {
-    if (acc[i].refreshToken && !utils.getExpiration(acc[i].refreshToken).expired) {
+    if (acc[i]?.refreshToken && !utils.getExpiration(acc[i].refreshToken).expired) {
       bots.push(await steamclient(acc[i], games[i], files, webhookClient));
     } else {
       newAcc = await utils.startWithQR(webhookClient);
