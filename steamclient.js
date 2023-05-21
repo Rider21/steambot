@@ -14,7 +14,7 @@ async function buildBot(config, game, files, webhookClient) {
       username: config.accountName,
     });
     bot.gamesPlayed(config?.game || game);
-    bot.setPersona(SteamUser.EPersonaState[config?.status || "offline"]);
+    bot.setPersona(config?.status || SteamUser.EPersonaState.Offline);
   });
 
   bot.on("disconnected", (e, msg) => {
