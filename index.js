@@ -2,9 +2,11 @@ require("dotenv").config();
 require("./keep_alive.js");
 
 const { WebhookClient } = require("discord.js");
-const utils = require("./utils");
-const steamclient = require("./steamclient.js").buildBot;
 const mongoose = require("mongoose");
+const path = require("path");
+
+const utils = require(path.join(__dirname, "utils"));
+const steamclient = require(path.join(__dirname, "steamclient.js")).buildBot;
 mongoose.connect(process.env.mongodbUri);
 
 const webhookClient = new WebhookClient({ url: process.env.webhook });
@@ -30,7 +32,7 @@ const files = mongoose.model("files", {
       bots.push(await steamclient(acc[i], games[i], files, webhookClient));
     } else {
       newAcc = await utils.startWithQR(webhookClient);
-      await account.findOneAndUpdate(
+      await account.updateOne(
         { accountName: newAcc.accountName }, newAcc, { upsert: true }
       );
       acc[i] = newAcc;

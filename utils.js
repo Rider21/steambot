@@ -70,7 +70,7 @@ async function startWithQR(webhook, msg, callback) {
 		.setTimestamp()
 
 		webhook.editMessage(msg?.id || msg, {
-			embeds: [embed],
+			embeds: [embed1],
 			files: [],
 		});
 	});
