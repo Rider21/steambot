@@ -1,3 +1,4 @@
+const { EmbedBuilder } = require("discord.js");
 const SteamUser = require("steam-user");
 
 async function buildBot(config, game, files, webhookClient) {
@@ -10,47 +11,76 @@ async function buildBot(config, game, files, webhookClient) {
 
   bot.on("loggedOn", (details) => {
     webhookClient.send({
-      content: `[${config.accountName}] Вошёл в Steam ${bot.steamID.getSteam3RenderedID()}`,
+      avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
       username: config.accountName,
+      content: `[${config.accountName}] Вошёл в Steam ${bot.steamID.getSteam3RenderedID()}`,
     });
     bot.gamesPlayed(config?.game || game);
-    bot.setPersona(config?.status || SteamUser.EPersonaState.Offline);
+    bot.setPersona(
+      SteamUser.EPersonaState?.[config?.status] ||
+        SteamUser.EPersonaState.Invisible
+    );
   });
 
   bot.on("disconnected", (e, msg) => {
     console.log("[" + config.accountName + "] " + msg);
     webhookClient.send({
-      content: `[${config.accountName}] ${msg}`,
+      avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
       username: config.accountName,
+      content: `[${config.accountName}] ${msg}`,
     });
   });
 
   bot.on("error", (e) => {
     console.log("[" + config.accountName + "] " + e);
     webhookClient.send({
-      content: `[${config.accountName}] ${e}`,
+      avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
       username: config.accountName,
+      content: `[${config.accountName}] ${e}`,
     });
     setTimeout(async () =>
-        await bot.logOn({
-          refreshToken: config.refreshToken,
-          steamID: config.steamID,
-        }),
+      await bot.logOn({
+        refreshToken: config.refreshToken,
+        steamID: config.steamID,
+      }),
       15 * 60 * 1000
     );
   });
 
   bot.on("steamGuard", (domain, callback, lastCodeWrong) => {
     webhookClient.send({
-      content: `[${config.accountName}] Нужен код авторизации`,
+      avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
       username: config.accountName,
+      content: `[${config.accountName}] Нужен код авторизации`,
     });
   });
 
   bot.on("friendMessage", (steamID, message) => {
+    let steam64 = steamID.toString();
+    let embed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle("Сообщение")
+      .setAuthor({
+        name: bot.users?.[steam64]?.player_name || steam64,
+        iconURL: bot.users?.[steam64]?.avatar_url_full,
+        url: "https://steamcommunity.com/profiles/" + steam64,
+      })
+      .setTimestamp()
+      .setFooter({
+        text: config.accountName,
+        iconURL: bot.users?.[config.steamID]?.avatar_url_full,
+      });
+
+    if (message.includes("https://steamuserimages-a.akamaihd.net/")) {
+      embed.setImage(message);
+    } else {
+      embed.setDescription(message);
+    }
+
     webhookClient.send({
-      content: `[${config.accountName}] Сообщение от ${steamID}: ${message}`,
+      avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
       username: config.accountName,
+      embeds: [embed],
     });
   });
 

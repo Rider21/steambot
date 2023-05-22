@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 
 const utils = require(path.join(__dirname, "utils"));
-const steamclient = require(path.join(__dirname, "steamclient.js")).buildBot;
+const steamclient = require(path.join(__dirname, "steamclient")).buildBot;
 mongoose.connect(process.env.mongodbUri);
 
 const webhookClient = new WebhookClient({ url: process.env.webhook });
