@@ -92,7 +92,7 @@ async function buildBot(config, game, files, webhookClient) {
   });
 
   bot.on("playingState", (blocked, playingApp) => {
-    if (!blocked) {
+    if (!blocked && playingApp == 0) {
       if (timeoutID?._destroyed || timeoutID == null) {
         timeoutID = setTimeout(() => {
           console.log(`[${config.accountName}] Зашел в игру`);
