@@ -8,6 +8,7 @@ async function buildBot(config, game, files, webhookClient) {
     autoRelogin: true,
     rememberPassword: true,
   });
+  let timeoutID = null;
 
   bot.on("loggedOn", (details) => {
     webhookClient.send({
@@ -15,7 +16,6 @@ async function buildBot(config, game, files, webhookClient) {
       username: config.accountName,
       content: `[${config.accountName}] Вошёл в Steam ${bot.steamID.getSteam3RenderedID()}`,
     });
-    bot.gamesPlayed(config?.game || game);
     bot.setPersona(
       SteamUser.EPersonaState?.[config?.status] ||
         SteamUser.EPersonaState.Invisible
@@ -23,6 +23,9 @@ async function buildBot(config, game, files, webhookClient) {
   });
 
   bot.on("disconnected", (e, msg) => {
+    if (timeoutID?._destroyed == false) {
+      clearTimeout(timeoutID);
+    }
     console.log("[" + config.accountName + "] " + msg);
     webhookClient.send({
       avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
@@ -32,18 +35,22 @@ async function buildBot(config, game, files, webhookClient) {
   });
 
   bot.on("error", (e) => {
+    if (timeoutID?._destroyed == false) {
+      clearTimeout(timeoutID);
+    }
     console.log("[" + config.accountName + "] " + e);
     webhookClient.send({
       avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
       username: config.accountName,
       content: `[${config.accountName}] ${e}`,
     });
+
     setTimeout(async () =>
       await bot.logOn({
         refreshToken: config.refreshToken,
         steamID: config.steamID,
       }),
-      15 * 60 * 1000
+      getRandomNumber(15 * 60 * 1000, 60 * 60 * 1000)
     );
   });
 
@@ -84,6 +91,24 @@ async function buildBot(config, game, files, webhookClient) {
     });
   });
 
+  bot.on("playingState", (blocked, playingApp) => {
+    if (!blocked) {
+      if (timeoutID?._destroyed || timeoutID == null) {
+        timeoutID = setTimeout(() => {
+          console.log(`[${config.accountName}] Зашел в игру`);
+          webhookClient.send({
+            avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
+            username: config.accountName,
+            content: `[${config.accountName}] Зашел в игру`,
+          });
+          bot.gamesPlayed(config?.game || game);
+        }, getRandomNumber(3 * 60 * 1000, 15 * 60 * 1000));
+      }
+    } else if (timeoutID?._destroyed == false) {
+      clearTimeout(timeoutID);
+    }
+  });
+
   bot.storage.on("save", async (filename, contents, callback) => {
     await files.updateOne(
       { filename },
@@ -95,7 +120,12 @@ async function buildBot(config, game, files, webhookClient) {
   bot.storage.on("read", (filename, callback) => {
     files
       .findOne({ filename })
-      .then((file) => callback(null, file?.content ? Buffer.from(file.content, "base64") : undefined))
+      .then((file) =>
+        callback(
+          null,
+          file?.content ? Buffer.from(file.content, "base64") : undefined
+        )
+      )
       .catch((err) => callback(err));
   });
 
@@ -105,6 +135,10 @@ async function buildBot(config, game, files, webhookClient) {
   });
 
   return bot;
+}
+
+function getRandomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
 module.exports.buildBot = buildBot;
