@@ -60,8 +60,8 @@ async function buildBot(config, game, files, webhookClient) {
     });
   });
 
-  bot.on('friendMessage', (steamID, message) => {
-    let steam64 = steamID.toString();
+  bot.chat.on('friendMessage', msg => {
+    let steam64 = msg.steamid_friend.toString();
     let embed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle('Сообщение')
@@ -70,16 +70,24 @@ async function buildBot(config, game, files, webhookClient) {
         iconURL: bot.users?.[steam64]?.avatar_url_full,
         url: 'https://steamcommunity.com/profiles/' + steam64
       })
-      .setTimestamp()
+      .setTimestamp(msg?.server_timestamp)
       .setFooter({
         text: config.accountName,
         iconURL: bot.users?.[config.steamID]?.avatar_url_full
       });
 
-    if (message.includes('https://steamuserimages-a.akamaihd.net/')) {
-      embed.setImage(message);
+    if (msg.message_bbcode_parsed[0]?.tag == 'img') {
+      embed.setImage(msg.message_bbcode_parsed[0].attrs.src);
     } else {
-      embed.setDescription(message);
+      let forwarding = msg.message;
+      if (msg.message_bbcode_parsed[0]?.tag == 'code') {
+        forwarding = '```\n' + msg.message_bbcode_parsed[0].content[0] + '```';
+      } else if (msg.message_bbcode_parsed[0]?.tag == 'spoiler') {
+        forwarding = '||' + msg.message_bbcode_parsed[0].content[0] + '||';
+      } else if (msg.message_bbcode_parsed[0]?.tag == 'quote') {
+        forwarding = '> ' + msg.message_bbcode_parsed[0].content[0];
+      }
+      embed.setDescription(forwarding);
     }
 
     webhookClient.send({
