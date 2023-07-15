@@ -1,9 +1,11 @@
 const { EmbedBuilder } = require('discord.js');
 const SteamUser = require('steam-user');
+const path = require('path');
+const { bbcodeToMarkdown } = require(path.join(__dirname, 'utils'));
 
 async function buildBot(config, game, files, webhookClient) {
   const bot = new SteamUser({
-    //dataDirectory: "./sentry",
+    //dataDirectory: './sentry',
     //singleSentryfile: false,
     autoRelogin: true,
     rememberPassword: true
@@ -75,19 +77,10 @@ async function buildBot(config, game, files, webhookClient) {
         text: config.accountName,
         iconURL: bot.users?.[config.steamID]?.avatar_url_full
       });
-
-    if (msg.message_bbcode_parsed[0]?.tag == 'img') {
-      embed.setImage(msg.message_bbcode_parsed[0].attrs.src);
-    } else {
-      let forwarding = msg.message;
-      if (msg.message_bbcode_parsed[0]?.tag == 'code') {
-        forwarding = '```\n' + msg.message_bbcode_parsed[0].content[0] + '```';
-      } else if (msg.message_bbcode_parsed[0]?.tag == 'spoiler') {
-        forwarding = '||' + msg.message_bbcode_parsed[0].content[0] + '||';
-      } else if (msg.message_bbcode_parsed[0]?.tag == 'quote') {
-        forwarding = '> ' + msg.message_bbcode_parsed[0].content[0];
-      }
-      embed.setDescription(forwarding);
+    let forwarding = bbcodeToMarkdown(msg?.message_bbcode_parsed || []);
+    embed.setDescription(forwarding?.text || msg?.message_no_bbcode || msg?.message);
+    if (forwarding?.image) {
+      embed.setImage(forwarding.image);
     }
 
     webhookClient.send({

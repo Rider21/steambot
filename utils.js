@@ -95,5 +95,67 @@ function getExpiration(token) {
   };
 }
 
+function escapeSymbols(str) {
+  return str.replace(/[|*~>\\_`]/g, matched => '\\' + matched);
+}
+
+function bbcodeToMarkdown(msg) {
+  let image;
+  let result = msg.map(item => {
+    switch (item?.tag) {
+      case 'img':
+        image = item.attrs?.thumbnail_src.endsWith('.gif')
+          ? item.attrs?.thumbnail_src //исправление отображения gif от giphy
+          : item.attrs.src;
+        if (item.attrs.giphy_search) {
+          return `/giphy ${item.attrs.giphy_search}\n${item.attrs.title}`;
+        }
+        return item.attrs.src;
+      case 'spoiler':
+        let otvet = bbcodeToMarkdown(item.content);
+        if (otvet?.image) image = otvet.image;
+        return '||' + otvet.text + '||';
+      case 'code':
+        return '```\n' + item.content[0].replace(/`/g, '\\`');
+        +'```';
+      case 'pre':
+        return '`' + escapeSymbols(item.content[0]) + '`';
+      case 'quote':
+        return '> ' + escapeSymbols(item.content[0]).replace(/\n/g, '\n> ');
+      case 'flip':
+        return `/flip: **${item.attrs.result == 'heads' ? 'ОРЁЛ' : 'РЕШКА'}**`;
+      case 'random':
+        return `/random: ${item.attrs.min} - ${item.attrs.max} : **${item.attrs.result}**`;
+      case 'url':
+        return item.attrs.src;
+      case 'emoticon':
+        if (!image)
+          image = encodeURI(
+            'https://community.cloudflare.steamstatic.com/economy/sticker/' + item.attrs.type
+          );
+        return ':' + item.content[0] + ':';
+      case 'sticker':
+        image = encodeURI(
+          'https://community.cloudflare.steamstatic.com/economy/sticker/' + item.attrs.type
+        );
+        return `[:${item.attrs.type}:](${image})`;
+      case 'og':
+        if (item.attrs.img) image = item.attrs.img;
+        return `${item.attrs.title}\n${item.attrs.desc}\n${item.attrs.url}`;
+      default:
+        if (item?.tag) {
+          console.log(item.tag, item.content[0]);
+        }
+        if (typeof item === 'string') {
+          return escapeSymbols(item);
+        }
+        return item;
+        break;
+    }
+  });
+  return { text: result.join(''), image };
+}
+
 module.exports.getExpiration = getExpiration;
+module.exports.bbcodeToMarkdown = bbcodeToMarkdown;
 module.exports.startWithQR = util.promisify(startWithQR);
