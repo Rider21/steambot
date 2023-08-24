@@ -12,7 +12,7 @@
   "author": "Rider21 <58046032+Rider21@users.noreply.github.com>",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "14.12.1",
+    "discord.js": "14.13.0",
     "dotenv": "^16.3.1",
     "mongoose": "7.3.4",
     "qrcode": "1.5.3",
