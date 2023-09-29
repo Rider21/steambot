@@ -14,6 +14,7 @@ async function startWithQR(webhook, msg, callback) {
     .setImage('attachment://qrcode.png');
 
   const session = new LoginSession(EAuthTokenPlatformType.SteamClient);
+  session.loginTimeout = 120000;
   const qrCodeData = await session.startWithQR();
   callback = typeof msg == 'function' ? msg : callback;
   msg = typeof msg == 'string' ? msg : null;

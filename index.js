@@ -35,8 +35,10 @@ const files = mongoose.model('files', {
       bots.push(await steamclient(acc[i], games[i], files, webhookClient));
     } else {
       newAcc = await utils.startWithQR(webhookClient);
-      await account.updateOne({ accountName: newAcc.accountName }, newAcc, { upsert: true });
-      acc[i] = newAcc;
+      acc[i] = await account.findOneAndUpdate({ accountName: newAcc.accountName }, newAcc, {
+        new: true,
+        upsert: true
+      });
       i--;
     }
   }

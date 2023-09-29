@@ -5,10 +5,10 @@ const { bbcodeToMarkdown } = require(path.join(__dirname, 'utils'));
 
 async function buildBot(config, game, files, webhookClient) {
   const bot = new SteamUser({
-    //dataDirectory: './sentry',
+    dataDirectory: './sentry',
     //singleSentryfile: false,
     autoRelogin: true,
-    rememberPassword: true
+    renewRefreshTokens: true
   });
   let timeoutID = null;
 
@@ -93,19 +93,27 @@ async function buildBot(config, game, files, webhookClient) {
   bot.on('playingState', (blocked, playingApp) => {
     if (!blocked && playingApp == 0) {
       if (timeoutID?._destroyed || timeoutID == null) {
-        timeoutID = setTimeout(() => {
-          console.log(`[${config.accountName}] Зашел в игру`);
-          webhookClient.send({
-            avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
-            username: config.accountName,
-            content: `[${config.accountName}] Зашел в игру`
-          });
-          bot.gamesPlayed(config?.game || game);
-        }, getRandomNumber(3 * 60 * 1000, 15 * 60 * 1000));
+        timeoutID = setTimeout(
+          () => {
+            console.log(`[${config.accountName}] Зашел в игру`);
+            webhookClient.send({
+              avatarURL: bot.users?.[config.steamID]?.avatar_url_full,
+              username: config.accountName,
+              content: `[${config.accountName}] Зашел в игру`
+            });
+            bot.gamesPlayed(config?.game || game);
+          },
+          getRandomNumber(3 * 60 * 1000, 15 * 60 * 1000)
+        );
       }
     } else if (timeoutID?._destroyed == false) {
       clearTimeout(timeoutID);
     }
+  });
+
+  bot.on('refreshToken', async token => {
+    config.refreshToken = token;
+    await config.save();
   });
 
   bot.storage.on('save', async (filename, contents, callback) => {
@@ -116,12 +124,12 @@ async function buildBot(config, game, files, webhookClient) {
     );
   });
 
-  bot.storage.on('read', (filename, callback) => {
+  bot.storage.on('read', (filename, callback) =>
     files
       .findOne({ filename })
       .then(file => callback(null, file?.content ? Buffer.from(file.content, 'base64') : undefined))
-      .catch(err => callback(err));
-  });
+      .catch(err => callback(err))
+  );
 
   await bot.logOn({
     refreshToken: config.refreshToken,
