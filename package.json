@@ -17,6 +17,6 @@
     "mongoose": "8.0.4",
     "qrcode": "1.5.3",
     "steam-session": "1.7.1",
-    "steam-user": "^5.0.7"
+    "steam-user": "^5.0.8"
   }
 }
