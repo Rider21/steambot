@@ -12,9 +12,9 @@
   "author": "Rider21 <58046032+Rider21@users.noreply.github.com>",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "14.14.1",
+    "discord.js": "14.15.2",
     "dotenv": "^16.4.5",
-    "mongoose": "8.3.1",
+    "mongoose": "8.3.4",
     "qrcode": "1.5.3",
     "steam-session": "1.7.2",
     "steam-user": "^5.0.9"
